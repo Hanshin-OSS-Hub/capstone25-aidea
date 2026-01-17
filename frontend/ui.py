@@ -188,7 +188,7 @@ if prompt := st.chat_input("질문을 입력하세요..."):
             try:
                 # 백엔드 서버 주소 확인!
                 BACKEND_URL = "http://localhost:8000/chat" 
-                response = requests.post(BACKEND_URL, json={"query": prompt}, timeout=30)
+                response = requests.post(BACKEND_URL, json={"query": prompt}, timeout=120)
                 
                 if response.status_code == 200:
                     full_response = response.json()["answer"]

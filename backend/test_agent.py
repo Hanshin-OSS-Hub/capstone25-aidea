@@ -16,34 +16,42 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from agent.agent import ScholarshipAgent
 
 def test_agent():
-    """에이전트 기본 동작 테스트"""
-    print("=" * 60)
-    print("🧪 ReAct 에이전트 테스트 시작")
-    print("=" * 60)
+    """에이전트 기본 동작 테스트 (최적화된 One-Shot 방식)"""
+    print("=" * 70)
+    print("🧪 최적화된 ReAct 에이전트 테스트 시작 (One-Shot 방식)")
+    print("=" * 70)
     
     try:
-        print("\n✅ 1단계: 에이전트 초기화 중...")
+        print("\n📌 1단계: 에이전트 초기화 중...")
         agent = ScholarshipAgent()
         print("✅ 에이전트 초기화 완료!")
         
-        print("\n✅ 2단계: 도구 확인")
-        print(f"   - 사용 가능한 도구 수: {len(agent.tools)}")
-        for tool in agent.tools:
-            print(f"     • {tool.name}: {tool.description[:50]}...")
+        print("\n📌 2단계: 테스트 질문 실행")
+        test_queries = [
+            "한신대학교 장학금에 대해 설명해주세요",
+            "나눔장학금의 지원 대상은?",
+            "성적 기준은 무엇인가요?",
+        ]
         
-        print("\n✅ 3단계: 테스트 질문 실행")
-        test_query = "한신대학교 장학금에 대해 설명해주세요"
-        print(f"   질문: {test_query}")
+        for i, test_query in enumerate(test_queries, 1):
+            print(f"\n   [{i}/{len(test_queries)}] 질문: {test_query}")
+            print("   ⏳ 에이전트 실행 중... (검색 → LLM 답변)")
+            
+            try:
+                response = agent.ask(test_query)
+                print("\n   ✅ 답변 생성 완료!")
+                print("   " + "-" * 66)
+                # 줄바꿈 처리
+                answer_lines = response.split('\n')
+                for line in answer_lines:
+                    print(f"   {line}")
+                print("   " + "-" * 66)
+            except Exception as query_error:
+                print(f"   ❌ 이 질문 처리 실패: {str(query_error)}")
         
-        print("\n   ⏳ 에이전트 실행 중... (검색 → 답변 생성)")
-        response = agent.ask(test_query)
-        
-        print("\n✅ 답변 생성 완료!")
-        print("-" * 60)
-        print(f"📝 답변:\n{response}")
-        print("-" * 60)
-        
-        print("\n✅ 테스트 완료!")
+        print("\n" + "=" * 70)
+        print("✅ 모든 테스트 완료!")
+        print("=" * 70)
         return True
     
     except Exception as e:
