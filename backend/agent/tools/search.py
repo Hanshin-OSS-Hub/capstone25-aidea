@@ -1,0 +1,44 @@
+# backend/agent/tools/search.py
+
+"""
+검색 도구: 벡터 DB에서 규정 검색
+역할: SchoolVectorDB에 접속해서 질문(Query)과 관련된 문서를 찾아옵니다.
+ReAct Agent가 호출할 수 있는 LangChain Tool로 구현됨.
+"""
+
+from langchain_core.tools import tool
+import sys
+import os
+
+# 경로 설정
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
+
+from config.internal_vdb.vectordb import SchoolVectorDB
+
+# DB를 한 번만 로딩하기 위해 싱글톤으로 관리
+_db_instance = None
+
+def get_db_instance():
+    """벡터 DB 인스턴스를 싱글톤으로 관리"""
+    global _db_instance
+    if _db_instance is None:
+        _db_instance = SchoolVectorDB()
+    return _db_instance
+
+@tool
+def search_scholarship_rules(query: str) -> str:
+    """
+    한신대학교 장학금 및 학사 규정을 검색합니다.
+    
+    사용자의 질문(query)을 받아서, 
+    Vector DB에서 관련된 규정 내용을 검색하여 문자열로 반환합니다.
+    
+    Args:
+        query (str): 검색할 질문 또는 키워드
+        
+    Returns:
+        str: 검색된 규정 내용 (문서 청크들)
+    """
+    db = get_db_instance()
+    results = db.search(query)
+    return results

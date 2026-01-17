@@ -95,7 +95,7 @@ class SchoolVectorDB:
             return "DB가 없습니다."
 
         results = self.vector_store.similarity_search_with_score(query, k=k)
-        
+        print(results)
         formatted_results = ""
         for i, (doc, score) in enumerate(results):
             source = doc.metadata.get("source", "Unknown")
