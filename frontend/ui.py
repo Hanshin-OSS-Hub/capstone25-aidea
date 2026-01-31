@@ -186,17 +186,28 @@ if prompt := st.chat_input("질문을 입력하세요..."):
         # 로딩 스피너를 좀 더 세련되게
         with st.spinner("🧠 규정 데이터를 분석 중입니다..."):
             try:
-                # 백엔드 서버 주소 확인!
-                BACKEND_URL = "http://localhost:8000/chat" 
-                response = requests.post(BACKEND_URL, json={"query": prompt}, timeout=120)
+                # 백엔드 서버 주소 확인! (명세서 v1 기준)
+                BACKEND_URL = "http://localhost:8000/api/v1/ai/chat"
+                response = requests.post(
+                    BACKEND_URL, 
+                    json={"user_id": 1, "message": prompt},  # 명세서 v1 형식
+                    timeout=120
+                )
                 
                 if response.status_code == 200:
-                    full_response = response.json()["answer"]
+                    response_data = response.json()
+                    if response_data.get("success") and response_data.get("data"):
+                        full_response = response_data["data"]["answer"]
+                    else:
+                        error_info = response_data.get("error", {})
+                        full_response = f"⚠️ **오류**: {error_info.get('message', '알 수 없는 오류')}"
                 else:
-                    full_response = f"⚠️ **서버 오류** (상태 코드: {response.status_code})\n\n잠시 후 다시 시도해주세요."
+                    error_data = response.json() if response.headers.get("content-type", "").startswith("application/json") else {}
+                    error_info = error_data.get("error", {})
+                    full_response = f"⚠️ **서버 오류** (상태 코드: {response.status_code})\n\n{error_info.get('message', '잠시 후 다시 시도해주세요.')}"
                     
             except requests.exceptions.ConnectionError:
-                 full_response = "⚠️ **서버 연결 실패**\n\n백엔드 서버(`python -m backend.main`)가 켜져 있는지 확인해주세요."
+                 full_response = "⚠️ **서버 연결 실패**\n\n백엔드 서버가 실행 중인지 확인해주세요.\n\n실행 방법:\n```bash\ncd c:\\Users\\jjh12\\Desktop\\cap\n.\\venv\\Scripts\\Activate.ps1\nuvicorn backend.main:app --reload --host 0.0.0.0 --port 8000\n```\n\n또는 `run_backend.bat` 파일을 실행하세요."
             except Exception as e:
                 full_response = f"⚠️ **알 수 없는 오류 발생**\n\n에러 내용: {e}"
         

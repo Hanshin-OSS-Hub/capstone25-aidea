@@ -25,13 +25,13 @@ def get_db_instance():
         _db_instance = SchoolVectorDB()
     return _db_instance
 
-def _format_search_results(results, max_length=1500):
+def _format_search_results(results, max_length=3000):
     """
     검색 결과를 정제하고 포맷합니다.
     
     - 중복 제거
-    - 최대 길이로 제한
-    - 출처 정보 추가
+    - 최대 길이로 제한 (문장 단위로 자르기)
+    - 출처 정보 유지
     """
     if isinstance(results, str):
         # 이미 문자열인 경우
@@ -41,14 +41,23 @@ def _format_search_results(results, max_length=1500):
         seen = set()
         for line in lines:
             line_stripped = line.strip()
+            # 빈 줄과 중복 제거
             if line_stripped and line_stripped not in seen:
                 unique_lines.append(line)
                 seen.add(line_stripped)
         
-        # 길이 제한
+        # 길이 제한 (문장 단위로 자르기)
         text = '\n'.join(unique_lines)
         if len(text) > max_length:
-            text = text[:max_length] + "..."
+            # 문장 단위로 자르기 (마지막 완전한 문장까지만)
+            truncated = text[:max_length]
+            last_period = truncated.rfind('.')
+            last_newline = truncated.rfind('\n')
+            cut_point = max(last_period, last_newline)
+            if cut_point > max_length * 0.8:  # 너무 앞에서 자르지 않도록
+                text = truncated[:cut_point + 1] + "\n..."
+            else:
+                text = truncated + "..."
         return text
     
     return results
@@ -62,18 +71,23 @@ def search_scholarship_rules(query: str) -> str:
     Vector DB에서 관련된 규정 내용을 검색하여 문자열로 반환합니다.
     검색 결과는 최적화되어 있습니다.
     
+    중요: 검색할 때는 질문 전체뿐만 아니라 핵심 키워드도 함께 사용하세요.
+    예: "장학금 신청 기간" -> "장학금", "신청", "기간" 각각으로도 검색해보세요.
+    
     Args:
-        query (str): 검색할 질문 또는 키워드 (예: "장학금", "성적", "나눔장학금")
+        query (str): 검색할 질문 또는 키워드 (예: "장학금", "성적", "나눔장학금", "장학금 신청 기간")
         
     Returns:
         str: 검색된 규정 내용 (정제되고 최적화된 형식)
     """
     db = get_db_instance()
     
-    # 원본 검색 수행
-    raw_results = db.search(query)
+    # 개선된 검색 수행 (더 많은 결과, 낮은 threshold로 더 많은 컨텍스트 확보)
+    # 복잡한 질문의 경우 더 많은 결과를 가져옴
+    k_value = 10 if len(query.split()) > 3 else 8  # 긴 질문은 더 많은 결과
+    raw_results = db.search(query, k=k_value, score_threshold=0.4)  # threshold를 더 낮춰서 더 많은 결과
     
-    # 결과 최적화
-    optimized_results = _format_search_results(raw_results, max_length=1500)
+    # 결과 최적화 (더 많은 컨텍스트 허용 - 복잡한 질문 대비)
+    optimized_results = _format_search_results(raw_results, max_length=4000)  # 더 긴 컨텍스트
     
     return optimized_results
