@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+jinja2
+langchain
+langchain-core
+langchain-openai
+langchain-community
+langgraph
+python-dotenv
+streamlit
+requests
+aiohttp
+psycopg2-binary
+sqlalchemy
+alembic
+faiss-cpu
+pypdf

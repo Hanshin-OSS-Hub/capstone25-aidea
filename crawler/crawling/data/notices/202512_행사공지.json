@@ -1,0 +1,44 @@
+[
+  {
+    "uid": "bc92c78b501f583003c92f83fc782d28fb39dd8d",
+    "source": "hs_notice",
+    "category": "event",
+    "category_name": "행사공지",
+    "title": "[휴먼케어융합대학원] 제11회 죽음학·죽음교육 학술대회(삶과 죽음, 그 사이의 흔들림)",
+    "url": "https://www.hs.ac.kr/bbs/kor/273/152518/artclView.do",
+    "posted_date": "2025-12-15",
+    "content_text": "",
+    "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "attachments": [],
+    "images": [],
+    "crawled_at": "2026-01-31T15:21:22"
+  },
+  {
+    "uid": "a5acc75a0b24df7c274d4a0d18d6f0f460cf69a2",
+    "source": "hs_notice",
+    "category": "event",
+    "category_name": "행사공지",
+    "title": "[학술원] 2025년 한신 정보과학연구소 논문공모전 개최",
+    "url": "https://www.hs.ac.kr/bbs/kor/273/152401/artclView.do",
+    "posted_date": "2025-12-04",
+    "content_text": "한신정보과학연구소에서는 아래와 같이 논문공모전을 개최합니다. 많은 관심과 참여 부탁드립니다.\n주최: 한신대학교\n주관: 정보과학연구소\n협찬: 진로취업본부, SW중심사업단\n대상: 교수, 대학(원)생 등\n논문마감: 12월12일(금) 24시\n논문제출: kangmg@hs.ac.kr\n031-379-0658\n[재출자 변경가능]\n논문심사기준\n독창성(50점),완성도(50점)\n시상(장학금 및 부상)\n최우수논문상1편 (연구소장상) 20만원\n우수논문상2편(진로취업단장상) 10만원\n장려상4편(SW중심사업단) 5만원\n기타:우수논문 한신정보과학논문지 게재\n첨부: 논문지양식 1부.",
+    "content_hash": "9c07964db58cc473bb0ca897ed4506bea7cb74df76ae7eb08432d543c63e48ed",
+    "attachments": [],
+    "images": [],
+    "crawled_at": "2026-01-31T15:21:23"
+  },
+  {
+    "uid": "77a2ab001075402db2d82753685c8fbc787333a6",
+    "source": "hs_notice",
+    "category": "event",
+    "category_name": "행사공지",
+    "title": "[학술원] 한신상생전환센터 2025년 콜로키움 개최(2025.12.12)",
+    "url": "https://www.hs.ac.kr/bbs/kor/273/152387/artclView.do",
+    "posted_date": "2025-12-12",
+    "content_text": "학술원 한신상생전환센터에서는  \"기억치유를 통한 전환\" 주제로 아래와 같이 콜로키움을 개최합니다.\n많은 관심과 참여 부탁드립니다.",
+    "content_hash": "5b0299bae32b4669c965798d5ccfb573a7fbf9440d5e5e62abb364fbe7d1ced1",
+    "attachments": [],
+    "images": [],
+    "crawled_at": "2026-01-31T15:21:24"
+  }
+]
