@@ -1,0 +1,51 @@
+{
+  "last_updated": "2026-01-31T15:22:01.894611",
+  "cutoff_date": "2025-12-01",
+  "files": {
+    "202601_공지사항.json": {
+      "count": 56,
+      "last_posted_date": "2026-01-02",
+      "last_uid": "5231566e8948a92a745cd67d7cb93d213e767287"
+    },
+    "202512_공지사항.json": {
+      "count": 5,
+      "last_posted_date": "2025-12-30",
+      "last_uid": "d03aa351d8dba23b8d1d3186b4face81c58ead8e"
+    },
+    "202601_행사공지.json": {
+      "count": 3,
+      "last_posted_date": "2026-01-07",
+      "last_uid": "92cbc929707e81f23ed98ffbdfd7a1613341810d"
+    },
+    "202512_행사공지.json": {
+      "count": 3,
+      "last_posted_date": "2025-12-12",
+      "last_uid": "77a2ab001075402db2d82753685c8fbc787333a6"
+    },
+    "202601_학사공지.json": {
+      "count": 1,
+      "last_posted_date": "2026-01-09",
+      "last_uid": "920e07ddb72d773423eaad27e0503ba0befa064f"
+    },
+    "202512_학사공지.json": {
+      "count": 3,
+      "last_posted_date": "2025-12-26",
+      "last_uid": "adcdd678bc1f50a890ec955bd284f722792dffe2"
+    },
+    "202601_장학사회봉사.json": {
+      "count": 11,
+      "last_posted_date": "2026-01-06",
+      "last_uid": "50a0f520dd090c4ddffd2baac304602d8f1d0c39"
+    },
+    "202512_장학사회봉사.json": {
+      "count": 9,
+      "last_posted_date": "2025-12-01",
+      "last_uid": "bd77740481c95903a3f755815d2a67c18a623d7d"
+    },
+    "202601_취업공지.json": {
+      "count": 1,
+      "last_posted_date": "2026-01-15",
+      "last_uid": "a572d6052555be937283f7044bc6f921fa490b07"
+    }
+  }
+}

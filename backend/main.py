@@ -9,14 +9,22 @@ API 명세서 v1 기준으로 작성된 REST API 서버입니다.
 import sys
 import os
 import asyncio
+
+# 프로젝트 루트에서 .env 로드 (backend/ 폴더에서 실행해도 동작)
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.env'))
+
 from fastapi import FastAPI, HTTPException, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import logging
 from concurrent.futures import ThreadPoolExecutor
 
-# 경로 설정
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# 경로 설정 (backend/ 또는 프로젝트 루트에서 실행 시 backend 패키지 인식)
+_backend_dir = os.path.dirname(os.path.abspath(__file__))
+_project_root = os.path.dirname(_backend_dir)
+sys.path.insert(0, _project_root)
+sys.path.insert(0, _backend_dir)
 
 # 에이전트 임포트
 from agent.agent import ScholarshipAgent
@@ -25,6 +33,9 @@ from agent.agent import ScholarshipAgent
 from api.schemas import ChatRequest, ChatResponse, ChatResponseData, SourceInfo, ErrorDetail
 from api.exceptions import ValidationError, AITimeoutError, AIUpstreamError, InternalError
 from api.responses import success_response
+
+# 라우터 임포트 (공지, 관심, 대시보드, 캘린더)
+from api.routers import notices, favorites, dashboard, calendar
 
 # ========================
 # 로깅 설정
@@ -178,6 +189,12 @@ async def chat_endpoint(request: ChatRequest):
 
 # API v1 라우터 등록 (엔드포인트 정의 후)
 app.include_router(api_v1_router)
+
+# 세부 기능 라우터 등록 (공지, 북마크, 대시보드, 캘린더)
+app.include_router(notices.router, prefix="/api/v1")
+app.include_router(favorites.router, prefix="/api/v1")
+app.include_router(dashboard.router, prefix="/api/v1")
+app.include_router(calendar.router, prefix="/api/v1")
 
 # ========================
 # 예외 핸들러 (명세서 v1 형식으로 변환)

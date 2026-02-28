@@ -1,0 +1,44 @@
+[
+  {
+    "uid": "22eb9819c7082372a97345272b2a73d03247482d",
+    "source": "hs_notice",
+    "category": "academic",
+    "category_name": "학사공지",
+    "title": "2025학년도 신입생 다전공 의무화 안내",
+    "url": "https://www.hs.ac.kr/bbs/kor/274/152644/artclView.do?layout=unknown",
+    "posted_date": "2025-12-29",
+    "content_text": "",
+    "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "attachments": [],
+    "images": [],
+    "crawled_at": "2026-01-31T15:21:34"
+  },
+  {
+    "uid": "48ffd6e3c7a434422cc9290bb434ec185b20fcfe",
+    "source": "hs_notice",
+    "category": "academic",
+    "category_name": "학사공지",
+    "title": "[학적] 복학신청기간 및 절차 안내 (2026학년도 1학기)",
+    "url": "https://www.hs.ac.kr/bbs/kor/274/152627/artclView.do?layout=unknown",
+    "posted_date": "2025-12-26",
+    "content_text": "",
+    "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "attachments": [],
+    "images": [],
+    "crawled_at": "2026-01-31T15:21:36"
+  },
+  {
+    "uid": "adcdd678bc1f50a890ec955bd284f722792dffe2",
+    "source": "hs_notice",
+    "category": "academic",
+    "category_name": "학사공지",
+    "title": "[학적] 휴학신청기간 및 절차 안내 (2026학년도 1학기)",
+    "url": "https://www.hs.ac.kr/bbs/kor/274/152626/artclView.do?layout=unknown",
+    "posted_date": "2025-12-26",
+    "content_text": "대학행정팀의 위치가 경삼관 3층으로 변경되었습니다(동계방학 공사기간중 임시장소임).\n방문하실때 기존 위치와 혼선없으시기 바랍니다. 불편을 드려 죄송합니다.\n*군휴학에서 일반휴학으로 변경하는 경우 연속\n휴학으로 주임교수님의 서명이 불필요합니다.",
+    "content_hash": "52f66a6b43d5cfc2ec5f42af2ed456caabba945a41a84885c184e7ac22fba111",
+    "attachments": [],
+    "images": [],
+    "crawled_at": "2026-01-31T15:21:37"
+  }
+]
