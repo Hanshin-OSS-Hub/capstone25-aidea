@@ -12,16 +12,18 @@ from backend.api.responses import success_response
 from backend.api.exceptions import InternalError
 from backend.models import CalendarEvent
 from datetime import datetime
+from backend.models.user import User
+from backend.api.routers.auth import get_current_user
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
 
 @router.get("/favorites")
 async def get_dashboard_favorites(
-    user_id: int = Query(1, description="사용자 ID"),
     limit: int = Query(5, ge=1, le=100, description="개수 제한"),
     sort: str = Query("deadline", description="정렬 (deadline/latest)"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     대시보드용 관심 공지 Top N
@@ -34,7 +36,7 @@ async def get_dashboard_favorites(
     try:
         result = NoticeService.get_dashboard_favorites(
             db=db,
-            user_id=user_id,
+            user_id=current_user.user_id,
             limit=limit,
             sort=sort
         )
@@ -47,9 +49,9 @@ async def get_dashboard_favorites(
 
 @router.get("/upcoming-events")
 async def get_upcoming_events(
-    user_id: int = Query(1, description="사용자 ID"),
     limit: int = Query(5, ge=1, le=10, description="개수 제한"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     대시보드용 다가오는 일정 Top N
@@ -62,7 +64,7 @@ async def get_upcoming_events(
     try:
         # 사용자의 일정 가져오기 (시작일 기준 정렬)
         events = db.query(CalendarEvent).filter(
-            CalendarEvent.user_id == user_id
+            CalendarEvent.user_id == current_user.user_id
         ).filter(
             CalendarEvent.start_at >= datetime.now()
         ).order_by(CalendarEvent.start_at).limit(limit).all()

@@ -12,19 +12,21 @@ from backend.database import get_db
 from backend.services.notice_service import NoticeService
 from backend.api.responses import success_response
 from backend.api.exceptions import ValidationError, InternalError
+from backend.models.user import User
+from backend.api.routers.auth import get_current_user
 
 router = APIRouter(prefix="/notices", tags=["Notices"])
 
 
 @router.get("")
 async def get_notices_list(
-    user_id: int = Query(1, description="사용자 ID (MVP 임시)"),
     page: int = Query(1, ge=1, description="페이지 번호"),
     size: int = Query(20, ge=1, le=100, description="페이지 크기"),
     sort: str = Query("latest", description="정렬 방식 (latest/deadline)"),
     category: Optional[str] = Query(None, description="카테고리 필터"),
     tag: Optional[str] = Query(None, description="태그 필터"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     공지사항 리스트 조회
@@ -34,7 +36,7 @@ async def get_notices_list(
     try:
         result = NoticeService.get_notices_list(
             db=db,
-            user_id=user_id,
+            user_id=current_user.user_id,
             page=page,
             size=size,
             sort=sort,
@@ -82,8 +84,8 @@ async def analyze_notice(
 @router.get("/{notice_id}")
 async def get_notice_detail(
     notice_id: int,
-    user_id: int = Query(1, description="사용자 ID (MVP 임시)"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     공지사항 상세 조회
@@ -94,7 +96,7 @@ async def get_notice_detail(
         result = NoticeService.get_notice_detail(
             db=db,
             notice_id=notice_id,
-            user_id=user_id
+            user_id=current_user.user_id
         )
         
         if not result:

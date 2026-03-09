@@ -10,20 +10,22 @@ from backend.database import get_db
 from backend.services.notice_service import NoticeService
 from backend.api.responses import success_response
 from backend.api.exceptions import ValidationError, InternalError
+from backend.models.user import User
+from backend.api.routers.auth import get_current_user
 
 router = APIRouter(prefix="/favorites", tags=["Favorites"])
 
 
 class FavoriteRequest(BaseModel):
     """관심 등록 요청"""
-    user_id: int
     notice_id: int
 
 
 @router.post("")
 async def add_favorite(
     request: FavoriteRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     관심 공지 등록
@@ -38,7 +40,7 @@ async def add_favorite(
     try:
         created = NoticeService.add_favorite(
             db=db,
-            user_id=request.user_id,
+            user_id=current_user.user_id,
             notice_id=request.notice_id
         )
         
@@ -60,8 +62,8 @@ async def add_favorite(
 @router.delete("/{notice_id}")
 async def remove_favorite(
     notice_id: int,
-    user_id: int = Query(1, description="사용자 ID"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     관심 공지 해제
@@ -75,7 +77,7 @@ async def remove_favorite(
     try:
         deleted = NoticeService.remove_favorite(
             db=db,
-            user_id=user_id,
+            user_id=current_user.user_id,
             notice_id=notice_id
         )
         

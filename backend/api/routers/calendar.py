@@ -12,13 +12,14 @@ from backend.database import get_db
 from backend.services.calendar_service import CalendarService
 from backend.api.responses import success_response
 from backend.api.exceptions import ValidationError, InternalError
+from backend.models.user import User
+from backend.api.routers.auth import get_current_user
 
 router = APIRouter(prefix="/calendar", tags=["Calendar"])
 
 
 class CreateEventRequest(BaseModel):
     """일정 생성 요청"""
-    user_id: int
     title: str
     start_at: str  # ISO 8601 형식 (예: "2026-02-14T09:00:00")
     end_at: str
@@ -35,14 +36,14 @@ class UpdateEventRequest(BaseModel):
 
 class CreateEventFromNoticeRequest(BaseModel):
     """공지사항에서 일정 생성 요청"""
-    user_id: int
     notice_id: int
 
 
 @router.post("")
 async def create_event(
     request: CreateEventRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     일정 생성
@@ -70,7 +71,7 @@ async def create_event(
         
         result = CalendarService.create_event(
             db=db,
-            user_id=request.user_id,
+            user_id=current_user.user_id,
             title=request.title,
             start_at=start_at,
             end_at=end_at,
@@ -90,11 +91,11 @@ async def create_event(
 
 @router.get("")
 async def get_events(
-    user_id: int = Query(1, description="사용자 ID"),
     year: Optional[int] = Query(None, description="연도"),
     month: Optional[int] = Query(None, ge=1, le=12, description="월"),
     day: Optional[int] = Query(None, ge=1, le=31, description="일"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     일정 조회 (월별, 날짜별)
@@ -108,7 +109,7 @@ async def get_events(
     try:
         result = CalendarService.get_events(
             db=db,
-            user_id=user_id,
+            user_id=current_user.user_id,
             year=year,
             month=month,
             day=day
@@ -123,8 +124,8 @@ async def get_events(
 @router.get("/{event_id}")
 async def get_event(
     event_id: int,
-    user_id: int = Query(1, description="사용자 ID"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     일정 상세 조회
@@ -139,7 +140,7 @@ async def get_event(
         result = CalendarService.get_event_by_id(
             db=db,
             event_id=event_id,
-            user_id=user_id
+            user_id=current_user.user_id
         )
         
         if not result:
@@ -157,8 +158,8 @@ async def get_event(
 async def update_event(
     event_id: int,
     request: UpdateEventRequest,
-    user_id: int = Query(1, description="사용자 ID"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     일정 수정
@@ -183,7 +184,7 @@ async def update_event(
         result = CalendarService.update_event(
             db=db,
             event_id=event_id,
-            user_id=user_id,
+            user_id=current_user.user_id,
             title=request.title,
             start_at=start_at,
             end_at=end_at,
@@ -206,8 +207,8 @@ async def update_event(
 @router.delete("/{event_id}")
 async def delete_event(
     event_id: int,
-    user_id: int = Query(1, description="사용자 ID"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     일정 삭제
@@ -222,7 +223,7 @@ async def delete_event(
         deleted = CalendarService.delete_event(
             db=db,
             event_id=event_id,
-            user_id=user_id
+            user_id=current_user.user_id
         )
         
         if not deleted:
@@ -239,7 +240,8 @@ async def delete_event(
 @router.post("/from-notice")
 async def create_event_from_notice(
     request: CreateEventFromNoticeRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     공지사항에서 일정 자동 생성
@@ -254,7 +256,7 @@ async def create_event_from_notice(
     try:
         result = CalendarService.create_event_from_notice(
             db=db,
-            user_id=request.user_id,
+            user_id=current_user.user_id,
             notice_id=request.notice_id
         )
         
