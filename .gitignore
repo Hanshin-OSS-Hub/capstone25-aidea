@@ -1,0 +1,40 @@
+# Environment
+.env
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node (frontend)
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker (로컬/오버라이드 설정, 생성 파일)
+docker-compose.override.yml
+docker-compose.local.yml
+*.local.yml
+.docker/
+docker-data/
+
+# YAML (로컬·비공개 설정만 제외, docker-compose.yml은 추적 유지)
+# *.yml  # 필요 시 주석 해제 (프로젝트 yml까지 무시함)
+
+.env
+venv/
+__pycache__/

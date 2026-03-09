@@ -1,0 +1,44 @@
+[
+  {
+    "uid": "9a7e72c7bd0653dfb893eb3b8bf31aee70ed5b50",
+    "source": "hs_notice",
+    "category": "event",
+    "category_name": "행사공지",
+    "title": "[국가데이터처] 제18기 국가데이터처 대학생 기자단 모집",
+    "url": "https://www.hs.ac.kr/bbs/kor/273/152916/artclView.do",
+    "posted_date": "2026-01-26",
+    "content_text": "",
+    "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "attachments": [],
+    "images": [],
+    "crawled_at": "2026-01-31T15:21:19"
+  },
+  {
+    "uid": "7e894ab2d4bc7b51a83629964e55336aa8ec6bc3",
+    "source": "hs_notice",
+    "category": "event",
+    "category_name": "행사공지",
+    "title": "[교육부] 모두의 아이디어 공모전 안내(~4.15)",
+    "url": "https://www.hs.ac.kr/bbs/kor/273/152794/artclView.do",
+    "posted_date": "2026-01-14",
+    "content_text": "",
+    "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "attachments": [],
+    "images": [],
+    "crawled_at": "2026-01-31T15:21:20"
+  },
+  {
+    "uid": "92cbc929707e81f23ed98ffbdfd7a1613341810d",
+    "source": "hs_notice",
+    "category": "event",
+    "category_name": "행사공지",
+    "title": "[한신대학교 유라시아연구소] 제42회 HEI Lecture 안내",
+    "url": "https://www.hs.ac.kr/bbs/kor/273/152724/artclView.do",
+    "posted_date": "2026-01-07",
+    "content_text": "",
+    "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "attachments": [],
+    "images": [],
+    "crawled_at": "2026-01-31T15:21:21"
+  }
+]

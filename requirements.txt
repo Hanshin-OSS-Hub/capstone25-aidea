@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+jinja2
+langchain
+langchain-core
+langchain-openai
+langgraph
+python-dotenv
+streamlit
+requests
+aiohttp
+
+# 인증/보안/이메일
+python-jose[cryptography]
+bcrypt
+boto3
