@@ -34,13 +34,14 @@ async def get_notices(
         raise
 
 
-@router.get("/unread-count")
-async def get_unread_count(
+
+@router.get("/bookmarks")
+async def get_bookmarks(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    count = await notice_service.get_unread_count(db, current_user.id)
-    return success({"count": count})
+    data = await notice_service.get_bookmarks(db, current_user.id)
+    return success({"items": data})
 
 
 @router.get("/{notice_id}")

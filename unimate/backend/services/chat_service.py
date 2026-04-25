@@ -83,7 +83,6 @@ async def get_daily_summary(db: AsyncSession, user_id: uuid.UUID) -> str:
     except Exception:
         pass
 
-    from services.notice_service import get_unread_count
     from services.schedule_service import get_schedules, get_category_count, get_next_exam
 
     today_ym = today_str[:7]  # YYYY-MM
@@ -95,7 +94,6 @@ async def get_daily_summary(db: AsyncSession, user_id: uuid.UUID) -> str:
     # 남은 과제·시험 개수
     assignment_count = await get_category_count(db, user_id, "과제")
     next_exam = await get_next_exam(db, user_id)
-    unread_count = await get_unread_count(db, user_id)
 
     parts = []
 
@@ -117,9 +115,6 @@ async def get_daily_summary(db: AsyncSession, user_id: uuid.UUID) -> str:
         parts.append(f"다음 시험: {next_exam['title']} (D-{next_exam['dday']})")
     else:
         parts.append("예정된 시험: 없음")
-
-    # 미확인 공지
-    parts.append(f"미확인 공지: {unread_count}건")
 
     context = "\n".join(parts)
 

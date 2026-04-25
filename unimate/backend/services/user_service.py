@@ -2,11 +2,18 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.user import User
+from models.assignment import UserInterestTag
 from schemas.user import UserMe, UserUpdateRequest, NotificationSettingsRequest
+from core.cache import cache_get, cache_set, cache_delete
+
+TAGS_CACHE_TTL = 600  # 10분
+
+def _tags_key(user_id: uuid.UUID) -> str:
+    return f"user:tags:{user_id}"
 
 
 def _now() -> datetime:
@@ -45,6 +52,10 @@ async def update_me(
         update(User).where(User.id == user_id).values(**values)
     )
     await db.commit()
+
+    from core.dependencies import invalidate_user_cache
+    await invalidate_user_cache(user_id)
+
     return await get_me(db, user_id)
 
 
@@ -59,6 +70,32 @@ async def update_notification_settings(
     )
     await db.commit()
     return settings_dict
+
+
+async def get_interest_tags(db: AsyncSession, user_id: uuid.UUID) -> list[str]:
+    cached = await cache_get(_tags_key(user_id))
+    if cached is not None:
+        return cached
+
+    result = await db.execute(
+        select(UserInterestTag.tag).where(UserInterestTag.user_id == user_id)
+    )
+    tags = [row[0] for row in result.all()]
+    await cache_set(_tags_key(user_id), tags, ttl=TAGS_CACHE_TTL)
+    return tags
+
+
+async def update_interest_tags(
+    db: AsyncSession, user_id: uuid.UUID, tags: list[str]
+) -> list[str]:
+    await db.execute(
+        delete(UserInterestTag).where(UserInterestTag.user_id == user_id)
+    )
+    for tag in tags:
+        db.add(UserInterestTag(user_id=user_id, tag=tag))
+    await db.commit()
+    await cache_delete(_tags_key(user_id))
+    return tags
 
 
 async def delete_me(db: AsyncSession, user_id: uuid.UUID) -> None:

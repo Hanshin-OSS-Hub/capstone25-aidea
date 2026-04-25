@@ -7,9 +7,30 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.schedule import UserSchedule
 from schemas.schedule import ScheduleCreate, ScheduleUpdate
+from core.cache import cache_get, cache_set, cache_delete
 
 # 한국 표준시 (UTC+9)
 KST = timezone(timedelta(hours=9))
+
+SCHEDULE_COUNT_TTL = 300    # 5분
+SCHEDULE_EXAM_TTL  = 3600   # 1시간
+
+
+def _count_key(user_id: uuid.UUID, category: str) -> str:
+    return f"schedule:count:{user_id}:{category}"
+
+
+def _exam_key(user_id: uuid.UUID) -> str:
+    return f"schedule:next-exam:{user_id}"
+
+
+async def _invalidate_schedule_cache(user_id: uuid.UUID) -> None:
+    """일정 변경 시 count/next-exam 캐시 삭제"""
+    await cache_delete(
+        _count_key(user_id, "과제"),
+        _count_key(user_id, "시험"),
+        _exam_key(user_id),
+    )
 
 
 def _now() -> datetime:
@@ -94,6 +115,7 @@ async def create_schedule(
     await db.commit()
     await db.refresh(schedule)
     await _invalidate_briefing_cache(user_id)
+    await _invalidate_schedule_cache(user_id)
     return _to_response(schedule)
 
 
@@ -140,6 +162,7 @@ async def update_schedule(
 
     await db.refresh(schedule)
     await _invalidate_briefing_cache(user_id)
+    await _invalidate_schedule_cache(user_id)
     return _to_response(schedule)
 
 
@@ -159,12 +182,17 @@ async def delete_schedule(
     )
     await db.commit()
     await _invalidate_briefing_cache(user_id)
+    await _invalidate_schedule_cache(user_id)
 
 
 async def get_category_count(
     db: AsyncSession, user_id: uuid.UUID, category: str
 ) -> int:
     """특정 카테고리의 미래 미완료 일정 개수 반환."""
+    cached = await cache_get(_count_key(user_id, category))
+    if cached is not None:
+        return cached
+
     now = _now()
     result = await db.execute(
         select(func.count(UserSchedule.id)).where(
@@ -174,7 +202,9 @@ async def get_category_count(
             UserSchedule.is_completed == False,  # noqa: E712
         )
     )
-    return result.scalar() or 0
+    count = result.scalar() or 0
+    await cache_set(_count_key(user_id, category), count, ttl=SCHEDULE_COUNT_TTL)
+    return count
 
 
 async def get_upcoming_by_category(
@@ -197,6 +227,10 @@ async def get_upcoming_by_category(
 
 
 async def get_next_exam(db: AsyncSession, user_id: uuid.UUID) -> dict | None:
+    cached = await cache_get(_exam_key(user_id))
+    if cached is not None:
+        return cached if cached != "__none__" else None
+
     now = _now()
     result = await db.execute(
         select(UserSchedule)
@@ -210,14 +244,17 @@ async def get_next_exam(db: AsyncSession, user_id: uuid.UUID) -> dict | None:
     )
     exam = result.scalar_one_or_none()
     if not exam:
+        # None도 캐시 (불필요한 반복 쿼리 방지)
+        await cache_set(_exam_key(user_id), "__none__", ttl=SCHEDULE_EXAM_TTL)
         return None
 
-    # D-Day는 KST 기준으로 계산
     today_kst = datetime.now(KST).date()
     exam_date_kst = exam.start_at.astimezone(KST).date()
     dday = (exam_date_kst - today_kst).days
-    return {
+    data = {
         "title": exam.title,
         "start_at": exam.start_at.isoformat(),
         "dday": dday,
     }
+    await cache_set(_exam_key(user_id), data, ttl=SCHEDULE_EXAM_TTL)
+    return data

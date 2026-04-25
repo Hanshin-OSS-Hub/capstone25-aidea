@@ -7,14 +7,16 @@ from core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# asyncpg 드라이버 사용 (DATABASE_URL이 postgresql+asyncpg:// 형식이어야 함)
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=(settings.APP_ENV == "development"),
+    echo=False,
     pool_pre_ping=True,
     pool_size=10,
     max_overflow=20,
 )
+
+from core.db_logger import setup_db_logging
+setup_db_logging(engine)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,

@@ -1,4 +1,7 @@
+from typing import List
+
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
@@ -7,6 +10,10 @@ from core.response import success
 from models.user import User
 from schemas.user import UserUpdateRequest, NotificationSettingsRequest
 import services.user_service as user_service
+
+
+class InterestTagsRequest(BaseModel):
+    tags: List[str]
 
 router = APIRouter()
 
@@ -38,6 +45,25 @@ async def update_notification_settings(
 ):
     data = await user_service.update_notification_settings(db, current_user.id, body)
     return success(data)
+
+
+@router.get("/me/interest-tags")
+async def get_interest_tags(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    tags = await user_service.get_interest_tags(db, current_user.id)
+    return success({"tags": tags})
+
+
+@router.put("/me/interest-tags")
+async def update_interest_tags(
+    body: InterestTagsRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    tags = await user_service.update_interest_tags(db, current_user.id, body.tags)
+    return success({"tags": tags})
 
 
 @router.delete("/me")

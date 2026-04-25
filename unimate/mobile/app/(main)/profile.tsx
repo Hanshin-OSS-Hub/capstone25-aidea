@@ -170,7 +170,7 @@ export default function ProfileScreen() {
           <MenuItem
             icon="heart-outline"
             label="관심 공지 모아보기"
-            onPress={() => router.push('/(main)/notices?filter=bookmarked')}
+            onPress={() => router.push('/(main)/notices/bookmarks')}
           />
           <MenuItem
             icon="notifications-outline"

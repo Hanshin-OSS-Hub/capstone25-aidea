@@ -2,6 +2,7 @@ import json
 import re
 import logging
 import hashlib
+import time
 from typing import AsyncGenerator
 
 from langchain_openai import ChatOpenAI
@@ -10,6 +11,7 @@ from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage
 from core.config import settings
 
 logger = logging.getLogger(__name__)
+ai_logger = logging.getLogger("ai")
 
 QUERY_SYNONYMS = {
     "근장": "근로장학생", "근로": "근로장학생", "근로장학": "근로장학생",
@@ -149,8 +151,12 @@ class ScholarshipAgent:
         if not tool_fn:
             return f"알 수 없는 도구: {name}"
         try:
+            t = time.monotonic()
             result = await tool_fn.ainvoke(args)
-            return str(result)
+            elapsed = round((time.monotonic() - t) * 1000)
+            result_str = str(result)
+            ai_logger.debug(f"  [TOOL] {name} → {elapsed}ms | 결과 {len(result_str)}자")
+            return result_str
         except Exception as e:
             logger.error(f"도구 실행 실패 ({name}): {e}")
             return f"검색 중 오류: {e}"
@@ -161,11 +167,21 @@ class ScholarshipAgent:
         if not query.strip():
             return "질문을 입력해주세요."
 
+        total_start = time.monotonic()
         logger.info(f"[질문] {query}")
+        ai_logger.info(f"━━ 질문 시작: {query[:60]}")
+
+        # ── 캐시 확인 ──────────────────────────────────────────
+        t = time.monotonic()
         cache_key = self._get_cache_key(query)
         cached = await self._get_cached(cache_key)
+        cache_ms = round((time.monotonic() - t) * 1000)
+
         if cached:
+            ai_logger.info(f"  [CACHE HIT] {cache_ms}ms → 총 {cache_ms}ms")
             return cached
+
+        ai_logger.debug(f"  [CACHE MISS] {cache_ms}ms")
 
         expanded_query, expanded_keywords = self._expand_query(query)
         keywords = self._extract_keywords(expanded_query)
@@ -189,10 +205,16 @@ class ScholarshipAgent:
 
         search_attempts = 0
         max_search = 5
+        llm_call_count = 0
+        tool_call_count = 0
 
         for _ in range(8):
             try:
+                t = time.monotonic()
                 ai_msg = await self.llm_with_tools.ainvoke(messages)
+                llm_ms = round((time.monotonic() - t) * 1000)
+                llm_call_count += 1
+                ai_logger.debug(f"  [LLM #{llm_call_count}] {llm_ms}ms | tool_calls={len(ai_msg.tool_calls)}")
             except Exception as e:
                 logger.error(f"LLM 호출 실패: {e}")
                 return "AI 서비스에 문제가 발생했습니다. 잠시 후 다시 시도해주세요."
@@ -201,6 +223,7 @@ class ScholarshipAgent:
 
             if ai_msg.tool_calls:
                 search_attempts += 1
+                tool_call_count += len(ai_msg.tool_calls)
                 if search_attempts > max_search:
                     break
 
@@ -222,14 +245,25 @@ class ScholarshipAgent:
             else:
                 answer = ai_msg.content or ""
                 await self._set_cache(cache_key, answer)
+                total_ms = round((time.monotonic() - total_start) * 1000)
+                ai_logger.info(
+                    f"  [완료] LLM {llm_call_count}회 | 도구 {tool_call_count}회 | 총 {total_ms}ms"
+                )
                 return answer
 
+        t = time.monotonic()
         final = await self.llm.ainvoke(messages)
+        llm_ms = round((time.monotonic() - t) * 1000)
+        llm_call_count += 1
         answer = final.content or (
             "규정을 찾는 데 시간이 너무 오래 걸렸습니다. "
             "학생복지팀(031-379-0049)으로 문의해주세요."
         )
         await self._set_cache(cache_key, answer)
+        total_ms = round((time.monotonic() - total_start) * 1000)
+        ai_logger.info(
+            f"  [완료-fallback] LLM {llm_call_count}회 | 도구 {tool_call_count}회 | 총 {total_ms}ms"
+        )
         return answer
 
     async def ask_stream(self, query: str) -> AsyncGenerator[str, None]:

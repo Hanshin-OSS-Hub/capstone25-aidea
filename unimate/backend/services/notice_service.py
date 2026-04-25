@@ -8,8 +8,15 @@ from sqlalchemy import select, delete, func, and_, case, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.notice import Notice, UserNoticeBookmark
+from core.cache import cache_get, cache_set, cache_delete_pattern, cache_delete
 
 logger = logging.getLogger(__name__)
+
+NOTICE_LIST_TTL = 1800  # 30분
+
+
+def _notice_list_key(user_id: uuid.UUID, page: int, category: str | None) -> str:
+    return f"notices:list:{user_id}:{category or 'all'}:{page}"
 
 
 def _now() -> datetime:
@@ -23,6 +30,10 @@ async def get_notices(
     page: int = 1,
     limit: int = 20,
 ) -> dict:
+    cached = await cache_get(_notice_list_key(user_id, page, category))
+    if cached is not None:
+        return cached
+
     try:
         bookmark_subq = (
             select(UserNoticeBookmark.notice_id)
@@ -69,13 +80,15 @@ async def get_notices(
             for notice, is_bm in rows
         ]
 
-        return {
+        data = {
             "items": items,
             "total": total,
             "page": page,
             "limit": limit,
             "has_next": (page * limit) < total,
         }
+        await cache_set(_notice_list_key(user_id, page, category), data, ttl=NOTICE_LIST_TTL)
+        return data
     except Exception as e:
         logger.error(f"get_notices 오류: {e}")
         traceback.print_exc()
@@ -116,6 +129,28 @@ async def get_notice(
     }
 
 
+async def get_bookmarks(db: AsyncSession, user_id: uuid.UUID) -> list[dict]:
+    """내가 북마크한 공지 목록 반환."""
+    result = await db.execute(
+        select(Notice)
+        .join(UserNoticeBookmark, UserNoticeBookmark.notice_id == Notice.id)
+        .where(UserNoticeBookmark.user_id == user_id)
+        .order_by(UserNoticeBookmark.created_at.desc())
+    )
+    notices = result.scalars().all()
+    return [
+        {
+            "id": str(n.id),
+            "title": n.title,
+            "category": n.category,
+            "published_at": n.published_at.isoformat() if n.published_at else None,
+            "source_type": n.source_type,
+            "is_bookmarked": True,
+        }
+        for n in notices
+    ]
+
+
 async def toggle_bookmark(
     db: AsyncSession, user_id: uuid.UUID, notice_id: uuid.UUID
 ) -> bool:
@@ -142,29 +177,15 @@ async def toggle_bookmark(
             delete(UserNoticeBookmark).where(UserNoticeBookmark.id == existing.id)
         )
         await db.commit()
+        await cache_delete_pattern(f"notices:list:{user_id}:*")
         return False
     else:
         db.add(UserNoticeBookmark(user_id=user_id, notice_id=notice_id))
         await db.commit()
+        await cache_delete_pattern(f"notices:list:{user_id}:*")
         return True
 
 
-async def get_unread_count(db: AsyncSession, user_id: uuid.UUID) -> int:
-    """최근 24시간 내 공지 중 북마크 안 한 것 count."""
-    since = _now() - timedelta(hours=24)
-
-    bookmarked_ids = (
-        select(UserNoticeBookmark.notice_id)
-        .where(UserNoticeBookmark.user_id == user_id)
-    )
-
-    result = await db.execute(
-        select(func.count(Notice.id)).where(
-            Notice.crawled_at >= since,
-            Notice.id.notin_(bookmarked_ids),
-        )
-    )
-    return result.scalar() or 0
 
 
 async def get_summary(db: AsyncSession, notice_id: uuid.UUID) -> str | None:

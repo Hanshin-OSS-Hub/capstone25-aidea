@@ -19,8 +19,8 @@ interface Notice {
   id: string;
   title: string;
   category: string;
-  source: string;
-  created_at: string;
+  source_type: string;
+  published_at: string | null;
   is_bookmarked: boolean;
 }
 
@@ -38,8 +38,10 @@ function getCategoryStyle(cat: string) {
   return CATEGORY_STYLE[cat] ?? CATEGORY_STYLE['기타'];
 }
 
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return '날짜 없음';
   const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '날짜 없음';
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
 }
 
@@ -152,9 +154,9 @@ export default function NoticesScreen() {
           </View>
           <Text style={styles.noticeTitle} numberOfLines={2}>{item.title}</Text>
           <View style={styles.noticeMeta}>
-            <Text style={styles.metaText}>{item.source}</Text>
+            <Text style={styles.metaText}>{item.source_type}</Text>
             <Text style={styles.metaDot}>·</Text>
-            <Text style={styles.metaText}>{formatDate(item.created_at)}</Text>
+            <Text style={styles.metaText}>{formatDate(item.published_at)}</Text>
           </View>
         </View>
         <TouchableOpacity

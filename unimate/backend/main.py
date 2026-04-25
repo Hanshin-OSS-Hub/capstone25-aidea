@@ -1,17 +1,19 @@
 import logging
 from contextlib import asynccontextmanager
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
+from core.logging_config import setup_logging
+from core.config import settings as _settings_early
+setup_logging(_settings_early.APP_ENV)
+
 logger = logging.getLogger(__name__)
 
+import time
 import traceback
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from core.db_logger import reset_query_stats, get_query_stats
 
 from core.config import settings
 from core.database import check_db_connection, enable_pgvector
@@ -66,6 +68,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── DB 쿼리 로깅 미들웨어 ─────────────────────────────────────────────────────
+
+req_logger = logging.getLogger("request")
+
+@app.middleware("http")
+async def db_logging_middleware(request: Request, call_next):
+    reset_query_stats()
+    start = time.monotonic()
+
+    response = await call_next(request)
+
+    elapsed_ms = round((time.monotonic() - start) * 1000, 2)
+    stats = get_query_stats()
+    path = request.url.path
+
+    # 헬스체크, 정적 파일은 제외
+    if not path.startswith(("/health", "/docs", "/redoc", "/openapi")):
+        req_logger.info(
+            f"{request.method} {path} → {response.status_code} "
+            f"| DB쿼리 {stats['count']}회 {stats['total_ms']}ms "
+            f"| 총 {elapsed_ms}ms"
+        )
+
+    return response
 
 # ── 라우터 등록 ───────────────────────────────────────────────────────────────
 

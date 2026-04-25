@@ -24,7 +24,6 @@ import { colors, borderRadius, fontSize, spacing } from '@/constants/theme';
 interface SummaryData {
   pendingAssignments: number;
   nextExamDday: number | null;
-  unreadNotices: number;
 }
 
 interface DailySummary {
@@ -111,15 +110,13 @@ export default function HomeScreen() {
       // 요약 카드 (3개 병렬)
       (async () => {
         try {
-          const [pendingRes, examRes, unreadRes] = await Promise.all([
+          const [pendingRes, examRes] = await Promise.all([
             apiClient.get('/api/v1/schedules/count', { params: { category: '과제' } }),
             apiClient.get('/api/v1/schedules/next-exam'),
-            apiClient.get('/api/v1/notices/unread-count'),
           ]);
           setSummary({
             pendingAssignments: pendingRes.data.data?.count ?? 0,
             nextExamDday: examRes.data.data?.dday ?? null,
-            unreadNotices: unreadRes.data.data?.count ?? 0,
           });
         } catch {
           setSummaryError(true);
@@ -221,13 +218,6 @@ export default function HomeScreen() {
         </View>
         <TouchableOpacity style={styles.bellWrapper} activeOpacity={0.7}>
           <Ionicons name="notifications-outline" size={24} color={colors.text} />
-          {(summary?.unreadNotices ?? 0) > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>
-                {(summary?.unreadNotices ?? 0) > 99 ? '99+' : summary!.unreadNotices}
-              </Text>
-            </View>
-          )}
         </TouchableOpacity>
       </View>
 
