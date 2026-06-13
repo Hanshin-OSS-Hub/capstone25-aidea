@@ -1,6 +1,7 @@
 # UniMate — AI 개발 규칙
 
-> OpenAI gpt-4o + LangChain Tool Calling + pgvector RAG
+> Claude (Anthropic) + LangChain Tool Calling + pgvector RAG
+> 임베딩 전용: OpenAI text-embedding-3-small
 
 ---
 
@@ -9,7 +10,7 @@
 ```
 사용자 질문
     ↓
-ScholarshipAgent (OpenAI gpt-4o)
+ScholarshipAgent (Claude claude-sonnet-4-5)
     ↓ Tool Calling
 ┌───────────────────────────────┐
 │  fetch_notices                │ → ILIKE 키워드 검색 (notices 테이블)
@@ -17,7 +18,7 @@ ScholarshipAgent (OpenAI gpt-4o)
 │  answer_faq                   │ → pgvector 벡터 검색 (notices + qa_documents)
 └───────────────────────────────┘
     ↓ 결과 수집
-gpt-4o → 최종 답변 생성 (SSE 스트리밍)
+claude-sonnet-4-5 → 최종 답변 생성 (SSE 스트리밍)
 ```
 
 ---
@@ -40,15 +41,16 @@ backend/ai/
 
 ```python
 # ai/agent.py
-from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
 from core.config import settings
 
 class ScholarshipAgent:
     def __init__(self):
-        self.llm = ChatOpenAI(
-            model=settings.OPENAI_LLM_MODEL,  # gpt-4o
-            temperature=0.3,
-            api_key=settings.OPENAI_API_KEY,
+        self.llm = ChatAnthropic(
+            model=settings.ANTHROPIC_MODEL,   # claude-sonnet-4-5
+            temperature=0,
+            max_tokens=3000,
+            anthropic_api_key=settings.ANTHROPIC_API_KEY.strip(),
         )
         tools = [fetch_notices, search_by_deadline, answer_faq]
         self.llm_with_tools = self.llm.bind_tools(tools)
@@ -178,12 +180,13 @@ async def upload_pdf(file: UploadFile, current_user=Depends(get_current_user)):
 
 ## 모델 사용 규칙
 
-| 용도 | 모델 | 이유 |
+| 용도 | 모델 | API |
 | --- | --- | --- |
-| Agent / 채팅 / 일일 요약 | `gpt-4o` | 성능 + Tool Calling |
-| 임베딩 | `text-embedding-3-small` | 1536차원, 비용 효율적 |
+| Agent / 채팅 / 일일 요약 | `claude-sonnet-4-5` | Anthropic (`ANTHROPIC_API_KEY`) |
+| 임베딩 | `text-embedding-3-small` | OpenAI (`OPENAI_API_KEY`) |
 
-> Anthropic Claude API는 사용하지 않음. `ANTHROPIC_API_KEY` 불필요.
+> LLM은 Claude, 임베딩만 OpenAI. 두 API 키 모두 `.env`에 필요.
+> `.env`에 `ANTHROPIC_MODEL=claude-sonnet-4-5` 설정 필수 — 모델명 오타 시 404 에러 발생.
 
 ---
 
@@ -193,4 +196,4 @@ async def upload_pdf(file: UploadFile, current_user=Depends(get_current_user)):
 - 대화 히스토리 20턴 초과 전달 금지
 - 사용자 개인정보를 LLM API에 원문 전달 금지
 - 임베딩 모델 임의 변경 금지 (변경 시 전체 재임베딩 필요)
-- Anthropic/Claude API 사용 금지 → OpenAI만 사용
+- LLM을 OpenAI로 되돌리지 말 것 → Claude 고정

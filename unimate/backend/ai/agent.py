@@ -5,7 +5,7 @@ import hashlib
 import time
 from typing import AsyncGenerator
 
-from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage
 
 from core.config import settings
@@ -25,11 +25,11 @@ QUERY_SYNONYMS = {
 class ScholarshipAgent:
 
     def __init__(self):
-        self.llm = ChatOpenAI(
-            model=settings.OPENAI_LLM_MODEL,
+        self.llm = ChatAnthropic(
+            model=settings.ANTHROPIC_MODEL,
             temperature=0,
             max_tokens=3000,
-            openai_api_key=settings.OPENAI_API_KEY.strip(),
+            anthropic_api_key=settings.ANTHROPIC_API_KEY.strip(),
         )
 
         from ai.tools.fetch_notices import fetch_notices

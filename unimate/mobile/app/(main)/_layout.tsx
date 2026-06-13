@@ -51,6 +51,7 @@ export default function MainLayout() {
       <Tabs.Screen name="assignments" options={{ href: null }} />
       <Tabs.Screen name="schedule/add" options={{ href: null }} />
       <Tabs.Screen name="notices/[id]" options={{ href: null }} />
+      <Tabs.Screen name="notices/bookmarks" options={{ href: null }} />
       <Tabs.Screen name="profile/notification" options={{ href: null }} />
       <Tabs.Screen name="profile/password" options={{ href: null }} />
     </Tabs>

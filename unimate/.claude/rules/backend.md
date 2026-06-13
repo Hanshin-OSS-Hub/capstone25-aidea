@@ -35,7 +35,7 @@ backend/
 │   ├── chat_service.py      # run_agent, get_daily_summary
 │   └── ...
 ├── ai/                      # AI Agent + Embeddings
-│   ├── agent.py             # ScholarshipAgent (OpenAI gpt-4o)
+│   ├── agent.py             # ScholarshipAgent (Claude claude-sonnet-4-5)
 │   ├── embeddings.py        # embed_notice, embed_pdf_chunk
 │   └── tools/
 │       ├── fetch_notices.py     # ILIKE 키워드 검색
@@ -125,7 +125,7 @@ def error(code: str, message: str) -> dict:
 
 ## 알려진 호환성 이슈
 
-- **passlib + bcrypt**: `bcrypt>=5.0.0`과 `passlib==1.7.4`는 비호환. 반드시 `bcrypt==4.0.1` 사용
+- **passlib + bcrypt + Python 3.14**: `passlib==1.7.4`는 Python 3.14에서 동작 불가. `passlib` 제거하고 `bcrypt`를 직접 사용 (`core/security.py` 참고)
 - **개발 서버 실행**: 모바일 기기에서 접속하려면 `uvicorn main:app --reload --host 0.0.0.0 --port 8000`
 
 ---

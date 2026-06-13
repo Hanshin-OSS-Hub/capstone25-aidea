@@ -35,6 +35,24 @@ async def get_notices(
 
 
 
+@router.get("/daily-top3")
+async def get_daily_top3(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    data = await notice_service.get_top3_daily(db)
+    return success(data)
+
+
+@router.get("/weekly-top3")
+async def get_weekly_top3(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    data = await notice_service.get_top3_weekly(db)
+    return success(data)
+
+
 @router.get("/bookmarks")
 async def get_bookmarks(
     current_user: User = Depends(get_current_user),

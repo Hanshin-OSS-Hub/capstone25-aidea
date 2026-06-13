@@ -9,13 +9,16 @@ passlib[bcrypt]
 resend
 langchain
 langchain-openai
+langchain-anthropic
 langchain-community
 langchain-text-splitters
 openai
+anthropic
 pypdf
 celery[redis]
 redis
 httpx
+requests
 beautifulsoup4
 pgvector
 python-multipart

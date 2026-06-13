@@ -8,16 +8,24 @@
 
 ```
 [회원가입]
-기본정보 입력(Step1) → 이메일 인증번호 발송(Step2) → 코드 검증 → 관심사 선택(Step3) → 계정 생성 → 토큰 발급
+Step1: 기본정보 입력
+  → POST /auth/send-verification  (인증번호 발송, TTL 5분)
+Step2: POST /auth/verify-email  (인증번호 검증)
+Step3: 관심사 선택
+  → POST /auth/register  (계정 생성 → access_token + refresh_token 발급)
 
 [로그인]
-username + password → bcrypt 비교 → Access Token(30분) + Refresh Token(14일)
+POST /auth/login
+  username + password → bcrypt 비교 → Access Token(30분) + Refresh Token(14일)
 
 [API 요청]
-Authorization: Bearer <access_token> → 만료 시 /auth/refresh로 갱신
+Authorization: Bearer <access_token> → 만료 시 POST /auth/refresh로 갱신
+
+[비밀번호 변경]
+POST /auth/change-password  → 기존 refresh_token 전체 revoke
 
 [회원탈퇴]
-deleted_at 기록 (소프트 딜리트) → Refresh Token 전체 revoke
+DELETE /auth/withdraw  → deleted_at 기록 (소프트 딜리트) → refresh_token 전체 revoke
 ```
 
 ---
@@ -75,14 +83,15 @@ async def get_current_user(
 
 ### 비밀번호
 
-- `passlib` + `bcrypt==4.0.1` 사용 (bcrypt 5.x와 비호환)
+- `passlib` 미사용. `bcrypt` 직접 사용 (Python 3.14 + passlib 비호환으로 교체)
+- `bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(rounds=12))`
+- `bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))`
 - 최소 8자, 영문+숫자 필수
 
 ### 인증번호
 
-- 6자리 숫자
-- TTL: 5분
-- 재전송 쿨다운: 60초 (Redis `email:cooldown:{email}`)
+- 6자리 숫자, TTL 5분, 재전송 쿨다운 60초 (Redis `email:cooldown:{email}`)
+- **개발 환경 우회**: `APP_ENV=development` 시 6자리 임의 숫자 입력하면 인증 통과 (Redis verify 키 삭제 처리)
 
 ### 토큰
 

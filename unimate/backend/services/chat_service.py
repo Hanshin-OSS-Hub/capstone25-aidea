@@ -6,7 +6,7 @@ from typing import AsyncGenerator
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from openai import AsyncOpenAI
+from anthropic import AsyncAnthropic
 
 from core.config import settings
 from models.chat import ChatSession, ChatMessage
@@ -119,24 +119,18 @@ async def get_daily_summary(db: AsyncSession, user_id: uuid.UUID) -> str:
     context = "\n".join(parts)
 
     try:
-        client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY.strip())
-        resp = await client.chat.completions.create(
-            model=settings.OPENAI_LLM_MODEL,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "한신대학교 AI 도우미입니다. "
-                        "학생의 캘린더 일정과 오늘 현황을 바탕으로 2~3문장으로 친근하게 브리핑해주세요. "
-                        "오늘 일정이 있으면 구체적으로 언급해주세요."
-                    ),
-                },
-                {"role": "user", "content": context},
-            ],
-            temperature=0.7,
+        client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY.strip())
+        resp = await client.messages.create(
+            model=settings.ANTHROPIC_MODEL,
             max_tokens=200,
+            system=(
+                "한신대학교 AI 도우미입니다. "
+                "학생의 캘린더 일정과 오늘 현황을 바탕으로 2~3문장으로 친근하게 브리핑해주세요. "
+                "오늘 일정이 있으면 구체적으로 언급해주세요."
+            ),
+            messages=[{"role": "user", "content": context}],
         )
-        summary = resp.choices[0].message.content or "오늘의 요약을 생성할 수 없습니다."
+        summary = resp.content[0].text if resp.content else "오늘의 요약을 생성할 수 없습니다."
     except Exception as e:
         logger.error(f"일일 요약 생성 실패: {e}")
         summary = f"오늘의 현황: {context}"

@@ -188,6 +188,56 @@ async def toggle_bookmark(
 
 
 
+CATEGORY_DISPLAY: dict[str, str] = {
+    "notice":      "공지사항",
+    "academic":    "학사",
+    "scholarship": "장학",
+    "employment":  "취업",
+    "event":       "행사",
+    "privacy":     "개인정보",
+}
+
+
+async def _get_top3(db: AsyncSession, date_from: datetime, date_to: datetime) -> list[dict]:
+    """날짜 범위 내 최신 공지 3개. 결과 없으면 전체 최신 3개로 폴백."""
+    result = await db.execute(
+        select(Notice)
+        .where(Notice.published_at >= date_from, Notice.published_at <= date_to)
+        .order_by(Notice.published_at.desc().nullslast())
+        .limit(3)
+    )
+    notices = result.scalars().all()
+
+    if not notices:
+        result = await db.execute(
+            select(Notice).order_by(Notice.published_at.desc().nullslast()).limit(3)
+        )
+        notices = result.scalars().all()
+
+    return [
+        {
+            "rank": idx + 1,
+            "id": str(n.id),
+            "title": n.title,
+            "category": CATEGORY_DISPLAY.get(n.category or "", n.category or "공지"),
+            "published_at": n.published_at.strftime("%Y-%m-%d") if n.published_at else "",
+        }
+        for idx, n in enumerate(notices)
+    ]
+
+
+async def get_top3_daily(db: AsyncSession) -> list[dict]:
+    """일간 추천 공지: 최근 2일 이내."""
+    now = _now()
+    return await _get_top3(db, date_from=now - timedelta(days=2), date_to=now)
+
+
+async def get_top3_weekly(db: AsyncSession) -> list[dict]:
+    """주간 추천 공지: 최근 8일 이내."""
+    now = _now()
+    return await _get_top3(db, date_from=now - timedelta(days=8), date_to=now)
+
+
 async def get_summary(db: AsyncSession, notice_id: uuid.UUID) -> str | None:
     result = await db.execute(
         select(Notice.summary).where(Notice.id == notice_id)
